@@ -17,19 +17,19 @@ El archivo CIAA_UDP_Receiver_Working_epy_block_ciaa_unpacker.py fue
 REVERTIDO a la versión antigua que leía desde offset 88 (incorrecto).
 
 Código problemático (línea 101):
-    payload = packet_bytes[88:88+1344]  # ❌ INCORRECTO!
+   payload = packet_bytes[0:1344]      # ❌ INCORRECTO!
 
 Debería ser:
-    payload = packet_bytes[0:1344]      # ✅ CORRECTO!
+   payload = packet_bytes[88:88+1344]  # ✅ CORRECTO!
 
 
 CORRECCIONES APLICADAS AHORA:
 =============================
 
-✅ 1. PAYLOAD SE LEE DESDE OFFSET 0 (no desde 88)
+✅ 1. PAYLOAD SE LEE DESDE OFFSET 88 (no desde 0)
    Archivo: CIAA_UDP_Receiver_Working_epy_block_ciaa_unpacker.py
    Línea: payload = packet_bytes[PAYLOAD_OFFSET:PAYLOAD_OFFSET+PAYLOAD_SIZE]
-   Donde: PAYLOAD_OFFSET = 0, PAYLOAD_SIZE = 1344
+   Donde: PAYLOAD_OFFSET = 88, PAYLOAD_SIZE = 1344
 
 ✅ 2. OPTIMIZACION CON NUMPY (10-20x más rápido)
    Reemplazados loops Python por operaciones vectorizadas:
@@ -59,9 +59,9 @@ CORRECCIONES APLICADAS AHORA:
      * Tamaño del buffer interno
      * Drop rate (%)
 
-✅ 5. BUSQUEDA DE SYNC CORREGIDA
-   - Busca timestamp válido en offset 1348
-   - Valida año 2020-2030
+✅ 5. PARSEO POR PDU
+   - Se procesa un datagrama completo por mensaje
+   - No hay busqueda de sync en stream
 
 
 CONFIGURACION DE GRAFICOS (YA ESTABA OK):

@@ -10,8 +10,8 @@ print("""
 
 ✅ CORRECCIONES APLICADAS:
 
-1. ✅ packet_parser.py - Header ahora se lee desde offset 1348
-2. ✅ CIAA_UDP_Receiver_Working_epy_block_ciaa_unpacker.py - Payload desde offset 0
+1. ✅ packet_parser.py - Header en offset 0 (payload en 88)
+2. ✅ CIAA_UDP_Receiver_Working_epy_block_ciaa_unpacker.py - Payload desde offset 88
 3. ✅ File sinks deshabilitados (no guarda archivos)
 4. ✅ Parser validado con captura real
 

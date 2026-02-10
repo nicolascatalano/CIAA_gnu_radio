@@ -6,7 +6,7 @@
 
 ## 🔍 RESUMEN EJECUTIVO
 
-**PROBLEMA CRÍTICO ENCONTRADO**: Algunos flowgraphs de GNU Radio siguen asumiendo el formato invertido/1436 bytes. El formato valido actual tiene el header en offset 0 y el payload a continuacion.
+**ESTADO ACTUAL**: El formato valido actual tiene el header en offset 0 y el payload a continuacion (offset 88), sin CRC. El flujo funciona con parseo por PDU.
 
 **Impacto**: Los datos graficados NO corresponden a las muestras reales del ADC si se usan offsets incorrectos.
 
@@ -25,11 +25,11 @@
 
 ---
 
-## 🐛 ERRORES DETECTADOS
+## 🐛 ERRORES DETECTADOS (HISTORICOS)
 
 ### 1. **Estructura de Paquete INCORRECTA**
 
-#### ❌ Lo que están usando ACTUALMENTE:
+#### ❌ Lo que se usaba ANTES:
 ```
 ┌──────────────────────────────────────────────────────────┐
 │ HEADER (88 bytes) │ PAYLOAD (1344 bytes) │ CRC (4 bytes) │
@@ -112,7 +112,7 @@ def _find_packet_sync(self, buffer):
                     return offset
 ```
 
-**Problema**: El campo `payload_size` esta en `offset 85` dentro del header (valor 84), y el header comienza en el byte 0 del paquete.
+**Problema**: El campo `payload_size` esta en `offset 85` dentro del header (valor 84), y el header comienza en el byte 0 del paquete. Esto ya no aplica si se parsea por PDU.
 
 ---
 

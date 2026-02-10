@@ -13,12 +13,12 @@ Causa: Los paquetes UDP llegan más rápido de lo que GNU Radio puede procesarlo
 SOLUCIONES IMPLEMENTADAS:
 ========================
 
-✅ 1. AUMENTAR COLA PDU_TO_STREAM (crítico)
-------------------------------------------
+✅ 1. PARSEO DIRECTO DE PDUs (crítico)
+------------------------------------
 Archivo: CIAA_UDP_Receiver_Working.grc
-Cambio:  depth: 16384 → 65536 (4x más grande)
+Cambio: se procesa un datagrama por mensaje (sin pdu_to_stream)
 
-Esto da más margen para absorber ráfagas de paquetes.
+Esto evita desalineaciones y reduce overhead de stream.
 
 
 ✅ 2. OPTIMIZAR UNPACKER CON NUMPY (mejora ~10-20x velocidad)
@@ -122,7 +122,7 @@ Posibles causas adicionales:
    → Desactivar time_sink temporalmente
    → Reducir FFT size en freq_sink
 
-4. Problema de red
+3. Problema de red
    → Verificar con: python monitor_udp_rate.py
    → Si ves paquetes, la red está OK
    → Si no ves paquetes, problema de red/firewall
