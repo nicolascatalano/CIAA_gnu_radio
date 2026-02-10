@@ -1,0 +1,395 @@
+options:
+  parameters:
+    author: CIAA Project
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: UDP receiver for CIAA-ACC data acquisition with packet unpacker
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: qt_gui
+    hier_block_src_path: '.:'
+    id: CIAA_UDP_Receiver_Working
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: prompt
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: CIAA UDP Receiver
+    window_size: (1000,800)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [392, 352.0]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: clk_divider
+  id: variable
+  parameters:
+    comment: 'Clock divider: 0=65MSPS, 1=32.5MSPS, etc.'
+    value: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [680, 352.0]
+    rotation: 0
+    state: enabled
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: Sample rate = 65 MHz / (clk_divider + 1)
+    value: 65e6 / (clk_divider + 1)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [568, 352.0]
+    rotation: 0
+    state: enabled
+- name: udp_port
+  id: variable
+  parameters:
+    comment: UDP port for CIAA streaming
+    value: '9999'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [784, 352.0]
+    rotation: 0
+    state: enabled
+- name: blocks_file_sink_0
+  id: blocks_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    comment: Dump raw UDP bytes
+    file: ciaa_udp_dump.bin
+    type: byte
+    unbuffered: 'False'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [944, 400.0]
+    rotation: 0
+    state: disabled
+- name: blocks_file_sink_1
+  id: blocks_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    comment: Save channel 0 data
+    file: ciaa_ch0_5packets.dat
+    type: float
+    unbuffered: 'False'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1344, 400.0]
+    rotation: 0
+    state: enabled
+- name: blocks_head_0
+  id: blocks_head
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Limit to 105 samples (5 packets)
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_items: '105'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1128, 504.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: Null sinks for channels 4-15
+    num_inputs: '12'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1296, 736.0]
+    rotation: 0
+    state: enabled
+- name: epy_block_ciaa_unpacker
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nfrom gnuradio import gr\nimport struct\nimport sys\nimport pmt\nfrom collections import deque\n\n# ESTRUCTURA REAL: [HEADER(0-87)] [PAYLOAD(88-1431)]\nHEADER_OFFSET = 0\nPAYLOAD_OFFSET = 88\nPAYLOAD_SIZE = 1344\nPACKET_SIZE = 1432\n\ntry:\n    sys.path.insert(0, r'f:\\\\Proyectos\\\\sist_adq_dbf\\\\gnuradio_streaming')\n    import packet_parser\n    PACKET_PARSER_AVAILABLE = True\nexcept ImportError:\n    PACKET_PARSER_AVAILABLE = False\n\nclass blk(gr.sync_block):\n    \"\"\"CIAA UDP Packet Unpacker - PDU input, 16 channels output\"\"\"\n    def __init__(self, data_type='int16', warn_overflow=True):\n        print(\"\\n\" + \"=\"*70)\n        print(\"CIAA UNPACKER - VERSION 2026-02-09 12:00 - HEADER FIRST\")\n        print(\"Header offset: 0 | Payload offset: 88 | Optimized: NumPy | Stats: every 500 pkts\")\n        print(\"=\"*70 + \"\\n\")\n        self.data_type = data_type\n        self.warn_overflow = warn_overflow\n        if PACKET_PARSER_AVAILABLE:\n            self.parser = packet_parser.CIAAPacketParser(verbose=False)\n        else:\n            self.parser = None\n        gr.sync_block.__init__(\n            self,\n            name='CIAA_Unpacker',\n            in_sig=None,\n            out_sig=[np.float32] * 16,\n        )\n        self.message_port_register_in(pmt.intern(\"pdus\"))\n        self.set_msg_handler(pmt.intern(\"pdus\"), self._handle_pdu)\n        self.sample_queue = deque()\n        self.current_samples = None\n        self.set_output_multiple(21)\n        self.packets_received = 0\n        self.packets_parsed = 0\n        self.saved_packet_count = 0\n        self.max_packets_to_save = 10\n        self.stop_after_packets = 10\n        self.stopped = False\n\n    def _save_packet_analysis(self, packet_bytes, packet_num):\n        \"\"\"Save raw packet, header and payload for analysis\"\"\"\n        try:\n            import os\n            from datetime import datetime\n            \n            timestamp = datetime.now().strftime(\"%Y%m%d_%H%M%S\")\n            base_dir = r'f:\\Proyectos\\sist_adq_dbf\\capturas'\n            os.makedirs(base_dir, exist_ok=True)\n            \n            # Save complete raw packet\n            raw_file = os.path.join(base_dir, f'packet_{timestamp}_pkt{packet_num:03d}_raw.bin')\n            with open(raw_file, 'wb') as f:\n                f.write(packet_bytes)\n            \n            # Save header (offset 0-87, 88 bytes)\n            header_bytes = packet_bytes[HEADER_OFFSET:HEADER_OFFSET+88]\n            header_file = os.path.join(base_dir, f'packet_{timestamp}_pkt{packet_num:03d}_header.bin')\n            with open(header_file, 'wb') as f:\n                f.write(header_bytes)\n            \n            # Save payload (offset 88-1431, 1344 bytes)\n            payload_bytes = packet_bytes[PAYLOAD_OFFSET:PAYLOAD_OFFSET+PAYLOAD_SIZE]\n            payload_file = os.path.join(base_dir, f'packet_{timestamp}_pkt{packet_num:03d}_payload.bin')\n            with open(payload_file, 'wb') as f:\n                f.write(payload_bytes)\n            \n            # Save parsed header as text\n            header_txt_file = os.path.join(base_dir, f'packet_{timestamp}_pkt{packet_num:03d}_header.txt')\n            with open(header_txt_file, 'w') as f:\n                # Parse header fields\n                timestamp_sec = struct.unpack('<Q', header_bytes[0:8])[0]\n                timestamp_nsec = struct.unpack('<Q', header_bytes[8:16])[0]\n                bd_id = struct.unpack('<B', header_bytes[16:17])[0]\n                ch_id = struct.unpack('<B', header_bytes[17:18])[0]\n                ch_adc = struct.unpack('<H', header_bytes[18:20])[0]\n                fifo_flags = struct.unpack('<16I', header_bytes[20:84])\n\n                try:\n                    timestamp_str = datetime.fromtimestamp(timestamp_sec).strftime('%Y-%m-%d %H:%M:%S')\n                    timestamp_str = f\"{timestamp_str}.{timestamp_nsec:09d}\"\n                except (OSError, ValueError, OverflowError):\n                    timestamp_str = f\"INVALID_TIMESTAMP({timestamp_sec})\"\n                \n                f.write(f\"HEADER ANALYSIS - Packet {packet_num}\\n\")\n                f.write(\"=\"*60 + \"\\n\")\n                payload_size = struct.unpack('<H', header_bytes[85:87])[0]\n\n                f.write(f\"Timestamp: {timestamp_sec}.{timestamp_nsec:09d}\\n\")\n                f.write(f\"Timestamp (str): {timestamp_str}\\n\")\n                f.write(f\"Payload size: {payload_size} ({payload_size * 16} bytes)\\n\")\n                f.write(f\"Board ID: 0x{bd_id:02X}\\n\")\n                f.write(f\"Channel ID: 0x{ch_id:02X}\\n\")\n                f.write(f\"ADC Channel: 0x{ch_adc:04X}\\n\")\n                f.write(f\"\\nFIFO Flags (16 channels):\\n\")\n                for i, flag in enumerate(fifo_flags):\n                    f.write(f\"  Ch{i:2d}: 0x{flag:08X}\\n\")\n            \n            print(f\"[Unpacker] Saved packet {packet_num} to capturas/\")\n        except Exception as e:\n            print(f\"[Unpacker] ERROR saving packet {packet_num}: {e}\")\n\n    def _handle_pdu(self, msg):\n        \"\"\"Handle incoming PDU (one UDP datagram)\"\"\"\n        if not pmt.is_pair(msg):\n            return\n        data = pmt.cdr(msg)\n        if not pmt.is_u8vector(data):\n            return\n        packet_bytes = bytes(pmt.u8vector_elements(data))\n        if len(packet_bytes) != PACKET_SIZE:\n            return\n\n        try:\n            samples = self._simple_unpack(packet_bytes)\n        except Exception:\n            return\n\n        self.sample_queue.append(samples)\n        self.packets_received += 1\n\n        if self.saved_packet_count < self.max_packets_to_save:\n            self._save_packet_analysis(packet_bytes, self.saved_packet_count + 1)\n            self.saved_packet_count += 1\n            if self.saved_packet_count == self.max_packets_to_save:\n                print(f\"[Unpacker] Completed saving {self.max_packets_to_save} packets for analysis\")\n\n    def work(self, input_items, output_items):\n        samples_produced = 0\n        max_samples = len(output_items[0])\n\n        while samples_produced + 21 <= max_samples:\n            if self.current_samples is None:\n                if not self.sample_queue:\n                    break\n                self.current_samples = self.sample_queue.popleft()\n\n            samples = self.current_samples\n            for ch in range(16):\n                output_items[ch][samples_produced:samples_produced+21] = samples[:, ch]\n            samples_produced += 21\n            self.packets_parsed += 1\n            self.current_samples = None\n\n            if self.packets_parsed == 1:\n                print(f\"[Unpacker] First packet successfully parsed\")\n                print(f\"  First sample Ch0: {samples[0, 0]:.0f}\")\n                print(f\"  Sample shape: {samples.shape}\")\n\n            if self.packets_parsed >= self.stop_after_packets and not self.stopped:\n                self.stopped = True\n                print(f\"\\n[Unpacker] Reached {self.stop_after_packets} packets. Processing complete.\")\n                print(f\"[Unpacker] Data saved to ciaa_ch0_5packets.dat\")\n                break\n\n        if self.stopped:\n            return samples_produced if samples_produced > 0 else -1\n\n        return samples_produced\n\n    def _simple_unpack(self, packet_bytes):\n        \"\"\"Unpack CIAA packet - OPTIMIZED with NumPy\"\"\"\n        if len(packet_bytes) != PACKET_SIZE:\n            raise ValueError(f\"Invalid packet size: {len(packet_bytes)}\")\n        \n        # Extract payload from offset 88\n        payload = packet_bytes[PAYLOAD_OFFSET:PAYLOAD_OFFSET+PAYLOAD_SIZE]\n        \n        # Parse as uint32 array and reshape (MUCH faster than loops)\n        words = np.frombuffer(payload, dtype=np.uint32)\n        words = words.reshape((21, 16))\n        \n        # Use full 32-bit counter value (HI:LO)\n#        samples = words.astype(np.float32)\n        words_signed = words.astype(np.int32)\n        samples = words_signed.astype(np.float32)\n	\n        \n        return samples"
+    affinity: ''
+    alias: ''
+    comment: Unpacks CIAA UDP packets into 16 channels
+    data_type: '''int16'''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    warn_overflow: 'True'
+  states:
+    _io_cache: ('CIAA_Unpacker', 'blk', [('data_type', "'int16'"), ('warn_overflow',
+      'True')], [('pdus', 'message', 1)], [('0', 'float', 1), ('1', 'float', 1), ('2',
+      'float', 1), ('3', 'float', 1), ('4', 'float', 1), ('5', 'float', 1), ('6',
+      'float', 1), ('7', 'float', 1), ('8', 'float', 1), ('9', 'float', 1), ('10',
+      'float', 1), ('11', 'float', 1), ('12', 'float', 1), ('13', 'float', 1), ('14',
+      'float', 1), ('15', 'float', 1)], 'CIAA UDP Packet Unpacker - PDU input, 16
+      channels output', ['data_type', 'warn_overflow'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [904, 488.0]
+    rotation: 0
+    state: enabled
+- name: network_socket_pdu_0
+  id: network_socket_pdu
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    host: 0.0.0.0
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    mtu: '10000'
+    port: str(udp_port)
+    tcp_no_delay: 'False'
+    type: UDP_SERVER
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [392, 568.0]
+    rotation: 0
+    state: enabled
+- name: qtgui_freq_sink_x_0
+  id: qtgui_freq_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    average: '1.0'
+    axislabels: 'True'
+    bw: samp_rate
+    color1: '"blue"'
+    color10: '"dark blue"'
+    color2: '"red"'
+    color3: '"green"'
+    color4: '"black"'
+    color5: '"cyan"'
+    color6: '"magenta"'
+    color7: '"yellow"'
+    color8: '"dark red"'
+    color9: '"dark green"'
+    comment: CIAA Spectrum (Ch 0-3)
+    ctrlpanel: 'True'
+    fc: '0'
+    fftsize: '1024'
+    freqhalf: 'True'
+    grid: 'True'
+    gui_hint: ''
+    label: Relative Gain
+    label1: Ch0
+    label10: ''
+    label2: Ch1
+    label3: Ch2
+    label4: Ch3
+    label5: ''
+    label6: ''
+    label7: ''
+    label8: ''
+    label9: ''
+    legend: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    name: '"CIAA Spectrum (Ch 0-3)"'
+    nconnections: '4'
+    norm_window: 'False'
+    showports: 'True'
+    tr_chan: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_tag: '""'
+    type: float
+    units: dB
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    wintype: window.WIN_BLACKMAN_hARRIS
+    ymax: '10'
+    ymin: '-140'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1608, 480.0]
+    rotation: 0
+    state: disabled
+- name: qtgui_time_sink_x_0
+  id: qtgui_time_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'True'
+    axislabels: 'True'
+    color1: blue
+    color10: dark blue
+    color2: red
+    color3: green
+    color4: black
+    color5: cyan
+    color6: magenta
+    color7: yellow
+    color8: dark red
+    color9: dark green
+    comment: Time domain visualization for channels 0-3
+    ctrlpanel: 'True'
+    entags: 'True'
+    grid: 'True'
+    gui_hint: ''
+    label1: Ch0
+    label10: ''
+    label2: Ch1
+    label3: Ch2
+    label4: Ch3
+    label5: ''
+    label6: ''
+    label7: ''
+    label8: ''
+    label9: ''
+    legend: 'True'
+    marker1: '-1'
+    marker10: '-1'
+    marker2: '-1'
+    marker3: '-1'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    name: '"CIAA Channels 0-3 (Time)"'
+    nconnections: '4'
+    size: '105'
+    srate: samp_rate
+    stemplot: 'False'
+    style1: '1'
+    style10: '1'
+    style2: '1'
+    style3: '1'
+    style4: '1'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: float
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
+    ymax: '20000'
+    ymin: '-20000'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1272, 576.0]
+    rotation: 0
+    state: enabled
+
+connections:
+- [blocks_head_0, '0', blocks_file_sink_1, '0']
+- [epy_block_ciaa_unpacker, '0', blocks_head_0, '0']
+- [epy_block_ciaa_unpacker, '0', qtgui_freq_sink_x_0, '0']
+- [epy_block_ciaa_unpacker, '0', qtgui_time_sink_x_0, '0']
+- [epy_block_ciaa_unpacker, '1', qtgui_freq_sink_x_0, '1']
+- [epy_block_ciaa_unpacker, '1', qtgui_time_sink_x_0, '1']
+- [epy_block_ciaa_unpacker, '10', blocks_null_sink_0, '6']
+- [epy_block_ciaa_unpacker, '11', blocks_null_sink_0, '7']
+- [epy_block_ciaa_unpacker, '12', blocks_null_sink_0, '8']
+- [epy_block_ciaa_unpacker, '13', blocks_null_sink_0, '9']
+- [epy_block_ciaa_unpacker, '14', blocks_null_sink_0, '10']
+- [epy_block_ciaa_unpacker, '15', blocks_null_sink_0, '11']
+- [epy_block_ciaa_unpacker, '2', qtgui_freq_sink_x_0, '2']
+- [epy_block_ciaa_unpacker, '2', qtgui_time_sink_x_0, '2']
+- [epy_block_ciaa_unpacker, '3', qtgui_freq_sink_x_0, '3']
+- [epy_block_ciaa_unpacker, '3', qtgui_time_sink_x_0, '3']
+- [epy_block_ciaa_unpacker, '4', blocks_null_sink_0, '0']
+- [epy_block_ciaa_unpacker, '5', blocks_null_sink_0, '1']
+- [epy_block_ciaa_unpacker, '6', blocks_null_sink_0, '2']
+- [epy_block_ciaa_unpacker, '7', blocks_null_sink_0, '3']
+- [epy_block_ciaa_unpacker, '8', blocks_null_sink_0, '4']
+- [epy_block_ciaa_unpacker, '9', blocks_null_sink_0, '5']
+- [network_socket_pdu_0, pdus, epy_block_ciaa_unpacker, pdus]
+
+metadata:
+  file_format: 1
+  grc_version: 3.10.12.0
+

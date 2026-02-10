@@ -1,0 +1,803 @@
+options:
+  parameters:
+    author: CIAA Project
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: "Interfaz gr\xE1fica para control CIAA-ACC con visualizaci\xF3n de\
+      \ flujo de datos"
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: qt_gui
+    hier_block_src_path: '.:'
+    id: CIAA_GUI
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: prompt
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: CIAA Control GUI
+    window_size: (1400,1000)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: data_source_mux
+  id: variable_qtgui_chooser
+  parameters:
+    comment: DATA_Source_Mux_Control
+    gui_hint: 1,0,1,2
+    label: Data Source
+    label0: DATOS_ADC
+    label1: OSC_LOC
+    label2: CONTADOR
+    label3: ''
+    label4: ''
+    labels: '[]'
+    num_opts: '3'
+    option0: '0'
+    option1: '1'
+    option2: '2'
+    option3: '3'
+    option4: '4'
+    options: '[0, 1, 2]'
+    orient: Qt.QVBoxLayout
+    type: int
+    value: '0'
+    widget: radio_buttons
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [600, 12]
+    rotation: 0
+    state: enabled
+- name: debug_mode
+  id: variable_qtgui_chooser
+  parameters:
+    comment: DEBUG_Control_base
+    gui_hint: 0,0,1,2
+    label: Debug Mode
+    label0: DISABLED (ADC)
+    label1: CONT_NBITS (Counter)
+    label2: MIDSCALE_SH
+    label3: DESERIALIZER
+    label4: ''
+    labels: '[]'
+    num_opts: '4'
+    option0: '0'
+    option1: '15'
+    option2: '1'
+    option3: '13'
+    option4: '4'
+    options: '[0, 1, 2]'
+    orient: Qt.QVBoxLayout
+    type: int
+    value: '0'
+    widget: radio_buttons
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [400, 12]
+    rotation: 0
+    state: enabled
+- name: fifo_input_mux
+  id: variable_qtgui_chooser
+  parameters:
+    comment: FIFO_Input_Mux_Control
+    gui_hint: 2,0,1,2
+    label: FIFO Input
+    label0: NONE
+    label1: PREPROC_DATA
+    label2: COUNTER_POST_PROC
+    label3: RAW_DATA
+    label4: MUX_DATA
+    labels: '[]'
+    num_opts: '5'
+    option0: '0'
+    option1: '1'
+    option2: '2'
+    option3: '3'
+    option4: '4'
+    options: '[0, 1, 2]'
+    orient: Qt.QVBoxLayout
+    type: int
+    value: '3'
+    widget: radio_buttons
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [800, 12]
+    rotation: 0
+    state: enabled
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '65000000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [200, 12]
+    rotation: 0
+    state: enabled
+- name: variable_qtgui_push_button_0
+  id: variable_qtgui_push_button
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: RESET System
+    pressed: '1'
+    released: '0'
+    type: int
+    value: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1016, 144.0]
+    rotation: 0
+    state: enabled
+- name: variable_qtgui_push_button_1
+  id: variable_qtgui_push_button
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: ENABLE Acquisition
+    pressed: '1'
+    released: '0'
+    type: int
+    value: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1208, 144.0]
+    rotation: 0
+    state: enabled
+- name: blocks_file_sink_0
+  id: blocks_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    comment: ''
+    file: f:\Proyectos\sist_adq_dbf\gnuradio\sink_UDP
+    type: byte
+    unbuffered: 'False'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [480, 440.0]
+    rotation: 0
+    state: enabled
+- name: blocks_file_sink_1
+  id: blocks_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    comment: ''
+    file: f:\Proyectos\sist_adq_dbf\gnuradio\sink_channel0
+    type: float
+    unbuffered: 'False'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [832, 352.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [680, 768.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0_0
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [848, 952.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0_1
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [856, 960.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0_10
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [688, 824.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0_2
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [848, 992.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0_3
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [696, 1040.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0_4
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [704, 944.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0_5
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [704, 912.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0_6
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [688, 864.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0_7
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [712, 1088.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0_8
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [688, 728.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0_9
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [696, 1000.0]
+    rotation: 0
+    state: enabled
+- name: epy_block_0
+  id: epy_block
+  parameters:
+    _source_code: "import sys\nsys.path.insert(0, r'f:\\Proyectos\\sist_adq_dbf')\n\
+      sys.path.insert(0, r'f:\\Proyectos\\sist_adq_dbf\\gnuradio')\n\nimport numpy\
+      \ as np\nfrom gnuradio import gr\nimport ciaa_control\n\nclass blk(gr.sync_block):\n\
+      \    \"\"\"Maneja clicks de botones CIAA\"\"\"\n    def __init__(self, reset_btn=0,\
+      \ enable_btn=0):\n        gr.sync_block.__init__(\n            self,\n     \
+      \       name='CIAA Button Handler',\n            in_sig=None,\n            out_sig=None\n\
+      \        )\n        self.ctrl = ciaa_control.get_controller()\n        self.reset_btn\
+      \ = reset_btn\n        self.enable_btn = enable_btn\n        self.last_reset\
+      \ = 0\n        self.last_enable = 0\n    \n    def set_reset(self, val):\n \
+      \       \"\"\"Callback para bot\xF3n RESET\"\"\"\n        if val == 1 and self.last_reset\
+      \ == 0:  # Flanco ascendente\n            print(\"\\n\U0001F504 RESET System\
+      \ pressed\")\n            if self.ctrl:\n                self.ctrl.reset_system()\n\
+      \                self.ctrl.reset_fifo()\n        self.last_reset = val\n   \
+      \ \n    def set_enable(self, val):\n        \"\"\"Callback para bot\xF3n ENABLE\"\
+      \"\"\n        if val == 1 and self.last_enable == 0:  # Flanco ascendente\n\
+      \            print(\"\\n\u25B6 ENABLE Acquisition pressed\")\n            if\
+      \ self.ctrl:\n                self.ctrl.enable_system(True)\n        self.last_enable\
+      \ = val\n    \n    def work(self, input_items, output_items):\n        # Monitorear\
+      \ cambios en botones\n        if hasattr(self, 'reset_btn') and self.reset_btn\
+      \ != self.last_reset:\n            self.set_reset(self.reset_btn)\n        \n\
+      \        if hasattr(self, 'enable_btn') and self.enable_btn != self.last_enable:\n\
+      \            self.set_enable(self.enable_btn)\n        \n        return 0"
+    affinity: ''
+    alias: ''
+    comment: ''
+    enable_btn: variable_qtgui_push_button_1
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    reset_btn: variable_qtgui_push_button_0
+  states:
+    _io_cache: ('CIAA Button Handler', 'blk', [('reset_btn', '0'), ('enable_btn',
+      '0')], [], [], 'Maneja clicks de botones CIAA', ['enable_btn', 'reset_btn'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1024, 48.0]
+    rotation: 0
+    state: enabled
+- name: epy_block_ciaa_apply
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nfrom gnuradio import gr\nimport sys\nsys.path.insert(0,\
+      \ r'f:\\Proyectos\\sist_adq_dbf')\nsys.path.insert(0, r'f:\\Proyectos\\sist_adq_dbf\\\
+      gnuradio')\nimport ciaa_control\n\nclass blk(gr.basic_block):\n    \"\"\"Aplica\
+      \ configuraci\xF3n CIAA\"\"\"\n    def __init__(self, debug_mode=0, data_source=0,\
+      \ fifo_input=0):\n        gr.basic_block.__init__(\n            self,\n    \
+      \        name='CIAA Config Apply',\n            in_sig=None,\n            out_sig=None\n\
+      \        )\n        self.ctrl = ciaa_control.get_controller()\n        self.last_debug\
+      \ = -1\n        self.last_source = -1\n        self.last_fifo = -1\n       \
+      \ print(\"OK CIAA Config Apply inicializado\")\n    \n    def set_debug_mode(self,\
+      \ val):\n        if self.ctrl and self.last_debug != val:\n            self.ctrl.set_debug_mode(val)\n\
+      \            self.last_debug = val\n    \n    def set_data_source(self, val):\n\
+      \        if self.ctrl and self.last_source != val:\n            self.ctrl.set_data_source_mux(val)\n\
+      \            self.last_source = val\n    \n    def set_fifo_input(self, val):\n\
+      \        if self.ctrl and self.last_fifo != val:\n            self.ctrl.set_fifo_input_mux(val)\n\
+      \            self.last_fifo = val"
+    affinity: ''
+    alias: ''
+    comment: "Bloque que aplica configuraci\xF3n SSH"
+    data_source: data_source_mux
+    debug_mode: debug_mode
+    fifo_input: fifo_input_mux
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: "('CIAA Config Apply', 'blk', [('debug_mode', '0'), ('data_source',\
+      \ '0'), ('fifo_input', '0')], [], [], 'Aplica configuraci\xF3n CIAA', [])"
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [200, 300]
+    rotation: 0
+    state: enabled
+- name: epy_block_unpacker
+  id: epy_block
+  parameters:
+    _source_code: "from gnuradio import gr\nimport struct\nimport numpy as np\n\n\
+      NUM_CHANNELS = 16\nSAMPLES_PER_PACKET = 21\nPACKET_HEADER_SIZE = 88\nEXPECTED_PACKET_SIZE\
+      \ = 1432\nMAX_PACKETS_PER_WORK = 10\n\nclass blk(gr.sync_block):\n    def __init__(self):\n\
+      \        gr.sync_block.__init__(\n            self,\n            name='CIAA\
+      \ UDP Unpacker',\n            in_sig=[np.uint8],\n            out_sig=[np.float32]*NUM_CHANNELS\n\
+      \        )\n        self.buffer = bytearray()\n        self.packet_count = 0\n\
+      \        self.error_count = 0\n        self.set_output_multiple(SAMPLES_PER_PACKET)\n\
+      \    \n    def work(self, input_items, output_items):\n        in_len = len(input_items[0])\n\
+      \        self.buffer.extend(input_items[0].tobytes())\n        \n        n_produced\
+      \ = 0\n        max_output = len(output_items[0])\n        packets_processed\
+      \ = 0\n\n        while (len(self.buffer) >= EXPECTED_PACKET_SIZE and \n    \
+      \           n_produced + SAMPLES_PER_PACKET <= max_output and\n            \
+      \   packets_processed < MAX_PACKETS_PER_WORK):\n            \n            data\
+      \ = self.buffer[:EXPECTED_PACKET_SIZE]\n            self.buffer = self.buffer[EXPECTED_PACKET_SIZE:]\n\
+      \            self.packet_count += 1\n            packets_processed += 1\n\n\
+      \            try:\n                payload_start = PACKET_HEADER_SIZE\n    \
+      \            \n                for row in range(SAMPLES_PER_PACKET):\n     \
+      \               for ch in range(NUM_CHANNELS):\n                        offset\
+      \ = payload_start + (row * NUM_CHANNELS * 4) + (ch * 4)\n                  \
+      \      \n                        if offset + 4 <= len(data):\n             \
+      \               word32 = struct.unpack('<I', data[offset:offset+4])[0]\n   \
+      \                         value16 = word32 & 0xFFFF\n                      \
+      \      signed_val = struct.unpack('<h', struct.pack('<H', value16))[0]\n   \
+      \                         output_items[ch][n_produced] = float(signed_val)\n\
+      \                    \n                    n_produced += 1\n               \
+      \ \n            except Exception as e:\n                self.error_count +=\
+      \ 1\n                if self.error_count <= 10:\n                    print(f\"\
+      ERROR paquete #{self.packet_count}: {e}\")\n\n        if self.packet_count %\
+      \ 100 == 0 and self.packet_count > 0:\n            print(f\"Paquete {self.packet_count}:\
+      \ {packets_processed} procesados, buffer: {len(self.buffer)} bytes\")\n\n  \
+      \      self.consume_each(in_len)\n        return n_produced\n    \n    def stop(self):\n\
+      \        print(f\"\\n=== ESTAD\xCDSTICAS FINALES ===\")\n        print(f\"Paquetes\
+      \ procesados: {self.packet_count}\")\n        print(f\"Errores: {self.error_count}\"\
+      )\n        print(f\"Tasa error: {100*self.error_count/max(1, self.packet_count):.2f}%\"\
+      )\n        return True\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('CIAA UDP Unpacker', 'blk', [], [('0', 'byte', 1)], [('0', 'float',
+      1), ('1', 'float', 1), ('2', 'float', 1), ('3', 'float', 1), ('4', 'float',
+      1), ('5', 'float', 1), ('6', 'float', 1), ('7', 'float', 1), ('8', 'float',
+      1), ('9', 'float', 1), ('10', 'float', 1), ('11', 'float', 1), ('12', 'float',
+      1), ('13', 'float', 1), ('14', 'float', 1), ('15', 'float', 1)], '', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [464, 608.0]
+    rotation: 0
+    state: enabled
+- name: import_ciaa
+  id: import
+  parameters:
+    alias: ''
+    comment: ''
+    imports: import sys; sys.path.insert(0, r'f:\Proyectos\sist_adq_dbf\gnuradio');
+      sys.path.insert(0, r'f:\Proyectos\sist_adq_dbf'); import ciaa_control
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [16, 156]
+    rotation: 0
+    state: enabled
+- name: network_socket_pdu_0
+  id: network_socket_pdu
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    host: 0.0.0.0
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    mtu: '10000'
+    port: '9999'
+    tcp_no_delay: 'False'
+    type: UDP_SERVER
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [16, 600]
+    rotation: 0
+    state: enabled
+- name: pdu_pdu_to_stream_x_0
+  id: pdu_pdu_to_stream_x
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    depth: '512'
+    early_behavior: pdu.EARLY_BURST_APPEND
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    type: byte
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [240, 600]
+    rotation: 0
+    state: enabled
+- name: qtgui_freq_sink_x_0
+  id: qtgui_freq_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    average: '1.0'
+    axislabels: 'True'
+    bw: samp_rate
+    color1: '"blue"'
+    color10: '"dark blue"'
+    color2: '"red"'
+    color3: '"green"'
+    color4: '"black"'
+    color5: '"cyan"'
+    color6: '"magenta"'
+    color7: '"yellow"'
+    color8: '"dark red"'
+    color9: '"dark green"'
+    comment: ''
+    ctrlpanel: 'False'
+    fc: '0'
+    fftsize: '1024'
+    freqhalf: 'True'
+    grid: 'True'
+    gui_hint: 8,0,4,4
+    label: Relative Gain
+    label1: Ch0
+    label10: ''
+    label2: Ch1
+    label3: Ch2
+    label4: Ch3
+    label5: ''
+    label6: ''
+    label7: ''
+    label8: ''
+    label9: ''
+    legend: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    name: '"CIAA Spectrum"'
+    nconnections: '4'
+    norm_window: 'False'
+    showports: 'True'
+    tr_chan: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_tag: '""'
+    type: float
+    units: dB
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    wintype: window.WIN_BLACKMAN_hARRIS
+    ymax: '10'
+    ymin: '-140'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [952, 640.0]
+    rotation: 0
+    state: enabled
+- name: qtgui_time_sink_x_0
+  id: qtgui_time_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    axislabels: 'True'
+    color1: blue
+    color10: dark blue
+    color2: red
+    color3: green
+    color4: black
+    color5: cyan
+    color6: magenta
+    color7: yellow
+    color8: dark red
+    color9: dark green
+    comment: ''
+    ctrlpanel: 'True'
+    entags: 'True'
+    grid: 'True'
+    gui_hint: 4,0,4,4
+    label1: Ch0
+    label10: Ch9
+    label2: Ch1
+    label3: Ch2
+    label4: Ch3
+    label5: Ch4
+    label6: Ch5
+    label7: Ch6
+    label8: Ch7
+    label9: Ch8
+    legend: 'True'
+    marker1: '-1'
+    marker10: '-1'
+    marker2: '-1'
+    marker3: '-1'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    name: '"CIAA Channels 0-3"'
+    nconnections: '4'
+    size: '1024'
+    srate: samp_rate
+    stemplot: 'False'
+    style1: '1'
+    style10: '1'
+    style2: '1'
+    style3: '1'
+    style4: '1'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: float
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
+    ymax: '20000'
+    ymin: '-20000'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [856, 464.0]
+    rotation: 0
+    state: enabled
+
+connections:
+- [epy_block_unpacker, '0', blocks_file_sink_1, '0']
+- [epy_block_unpacker, '0', qtgui_freq_sink_x_0, '0']
+- [epy_block_unpacker, '0', qtgui_time_sink_x_0, '0']
+- [epy_block_unpacker, '1', qtgui_freq_sink_x_0, '1']
+- [epy_block_unpacker, '1', qtgui_time_sink_x_0, '1']
+- [epy_block_unpacker, '10', blocks_null_sink_0_0, '0']
+- [epy_block_unpacker, '11', blocks_null_sink_0_1, '0']
+- [epy_block_unpacker, '12', blocks_null_sink_0_2, '0']
+- [epy_block_unpacker, '13', blocks_null_sink_0_9, '0']
+- [epy_block_unpacker, '14', blocks_null_sink_0_7, '0']
+- [epy_block_unpacker, '15', blocks_null_sink_0_3, '0']
+- [epy_block_unpacker, '2', qtgui_freq_sink_x_0, '2']
+- [epy_block_unpacker, '2', qtgui_time_sink_x_0, '2']
+- [epy_block_unpacker, '3', qtgui_freq_sink_x_0, '3']
+- [epy_block_unpacker, '3', qtgui_time_sink_x_0, '3']
+- [epy_block_unpacker, '4', blocks_null_sink_0_8, '0']
+- [epy_block_unpacker, '5', blocks_null_sink_0, '0']
+- [epy_block_unpacker, '6', blocks_null_sink_0_10, '0']
+- [epy_block_unpacker, '7', blocks_null_sink_0_6, '0']
+- [epy_block_unpacker, '8', blocks_null_sink_0_5, '0']
+- [epy_block_unpacker, '9', blocks_null_sink_0_4, '0']
+- [network_socket_pdu_0, pdus, pdu_pdu_to_stream_x_0, pdus]
+- [pdu_pdu_to_stream_x_0, '0', blocks_file_sink_0, '0']
+- [pdu_pdu_to_stream_x_0, '0', epy_block_unpacker, '0']
+
+metadata:
+  file_format: 1
+  grc_version: 3.10.12.0
