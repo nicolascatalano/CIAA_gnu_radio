@@ -20,13 +20,14 @@ except ImportError:
 
 class blk(gr.sync_block):
     """CIAA UDP Packet Unpacker - PDU input, 16 channels output"""
-    def __init__(self, data_type='int16', warn_overflow=True):
+    def __init__(self, data_type='int16', warn_overflow=True, max_packets_to_save=10, data_mode=0):
         print("\n" + "="*70)
         print("CIAA UNPACKER - VERSION 2026-02-09 12:00 - HEADER FIRST")
         print("Header offset: 0 | Payload offset: 88 | Optimized: NumPy | Stats: every 500 pkts")
         print("="*70 + "\n")
         self.data_type = data_type
         self.warn_overflow = warn_overflow
+        self.data_mode = data_mode
         if PACKET_PARSER_AVAILABLE:
             self.parser = packet_parser.CIAAPacketParser(verbose=False)
         else:
@@ -45,9 +46,13 @@ class blk(gr.sync_block):
         self.packets_received = 0
         self.packets_parsed = 0
         self.saved_packet_count = 0
-        self.max_packets_to_save = 10
-        self.stop_after_packets = 10
-        self.stopped = False
+        self.max_packets_to_save = max_packets_to_save
+
+    def set_max_packets_to_save(self, max_packets_to_save):
+        self.max_packets_to_save = int(max_packets_to_save)
+
+    def set_data_mode(self, data_mode):
+        self.data_mode = int(data_mode)
 
     def _save_packet_analysis(self, packet_bytes, packet_num):
         """Save raw packet, header and payload for analysis"""
@@ -130,7 +135,7 @@ class blk(gr.sync_block):
         self.sample_queue.append(samples)
         self.packets_received += 1
 
-        if self.saved_packet_count < self.max_packets_to_save:
+        if self.max_packets_to_save > 0 and self.saved_packet_count < self.max_packets_to_save:
             self._save_packet_analysis(packet_bytes, self.saved_packet_count + 1)
             self.saved_packet_count += 1
             if self.saved_packet_count == self.max_packets_to_save:
@@ -158,15 +163,6 @@ class blk(gr.sync_block):
                 print(f"  First sample Ch0: {samples[0, 0]:.0f}")
                 print(f"  Sample shape: {samples.shape}")
 
-            if self.packets_parsed >= self.stop_after_packets and not self.stopped:
-                self.stopped = True
-                print(f"\n[Unpacker] Reached {self.stop_after_packets} packets. Processing complete.")
-                print(f"[Unpacker] Data saved to ciaa_ch0_5packets.dat")
-                break
-
-        if self.stopped:
-            return samples_produced if samples_produced > 0 else -1
-
         return samples_produced
 
     def _simple_unpack(self, packet_bytes):
@@ -181,10 +177,15 @@ class blk(gr.sync_block):
         words = np.frombuffer(payload, dtype=np.uint32)
         words = words.reshape((21, 16))
         
-        # Use full 32-bit counter value (HI:LO)
-#        samples = words.astype(np.float32)
-        words_signed = words.astype(np.int32)
-        samples = words_signed.astype(np.float32)
-	
-        
+        if self.data_mode == 1:
+            # Signed 16-bit from low half
+            samples = (words & 0xFFFF).astype(np.int16).astype(np.float32)
+        elif self.data_mode == 2:
+            # Raw ADC: 14-bit two's complement (bit 13 is sign)
+            raw14 = (words & 0x3FFF).astype(np.int16)
+            raw14[raw14 & 0x2000 > 0] -= 0x4000
+            samples = raw14.astype(np.float32)
+        else:
+            samples = words.astype(np.float32)
+
         return samples
