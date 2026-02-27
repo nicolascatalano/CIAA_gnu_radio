@@ -13,6 +13,7 @@
 from PyQt5 import Qt
 from gnuradio import qtgui
 from PyQt5.QtCore import QObject, pyqtSlot
+from gnuradio import blocks
 from gnuradio import gr
 from gnuradio.filter import firdes
 from gnuradio.fft import window
@@ -96,9 +97,9 @@ class CIAA_UDP_Receiver_Working(gr.top_block, Qt.QWidget):
         for c in range(0, 1):
             self.top_grid_layout.setColumnStretch(c, 1)
         # Create the options list
-        self._data_mode_options = [0, 1, 2]
+        self._data_mode_options = [0, 1, 2, 3]
         # Create the labels list
-        self._data_mode_labels = ['Unsigned (uint32)', 'Signed (int16)', 'Raw (14-bit)']
+        self._data_mode_labels = ['Unsigned (uint32)', 'Signed (int16)', 'Raw (14-bit)', 'Complejo (HI + j*LO)']
         # Create the combo box
         self._data_mode_tool_bar = Qt.QToolBar(self)
         self._data_mode_tool_bar.addWidget(Qt.QLabel("Data mode" + ": "))
@@ -115,11 +116,11 @@ class CIAA_UDP_Receiver_Working(gr.top_block, Qt.QWidget):
             self.top_grid_layout.setRowStretch(r, 1)
         for c in range(0, 1):
             self.top_grid_layout.setColumnStretch(c, 1)
-        self.qtgui_time_sink_x_1 = qtgui.time_sink_f(
+        self.qtgui_time_sink_x_1 = qtgui.time_sink_c(
             (display_packets * 21), #size
             samp_rate, #samp_rate
             "CIAA Channels 8-15 (Time)", #name
-            8, #number of inputs
+            5, #number of inputs
             None # parent
         )
         self.qtgui_time_sink_x_1.set_update_time(0.10)
@@ -150,9 +151,12 @@ class CIAA_UDP_Receiver_Working(gr.top_block, Qt.QWidget):
             -1, -1, -1, -1, -1]
 
 
-        for i in range(8):
+        for i in range(10):
             if len(labels[i]) == 0:
-                self.qtgui_time_sink_x_1.set_line_label(i, "Data {0}".format(i))
+                if (i % 2 == 0):
+                    self.qtgui_time_sink_x_1.set_line_label(i, "Re{{Data {0}}}".format(i/2))
+                else:
+                    self.qtgui_time_sink_x_1.set_line_label(i, "Im{{Data {0}}}".format(i/2))
             else:
                 self.qtgui_time_sink_x_1.set_line_label(i, labels[i])
             self.qtgui_time_sink_x_1.set_line_width(i, widths[i])
@@ -163,11 +167,11 @@ class CIAA_UDP_Receiver_Working(gr.top_block, Qt.QWidget):
 
         self._qtgui_time_sink_x_1_win = sip.wrapinstance(self.qtgui_time_sink_x_1.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_time_sink_x_1_win)
-        self.qtgui_time_sink_x_0 = qtgui.time_sink_f(
+        self.qtgui_time_sink_x_0 = qtgui.time_sink_c(
             (display_packets * 21), #size
             samp_rate, #samp_rate
             "CIAA Channels 0-7 (Time)", #name
-            8, #number of inputs
+            5, #number of inputs
             None # parent
         )
         self.qtgui_time_sink_x_0.set_update_time(0.10)
@@ -198,9 +202,12 @@ class CIAA_UDP_Receiver_Working(gr.top_block, Qt.QWidget):
             -1, -1, -1, -1, -1]
 
 
-        for i in range(8):
+        for i in range(10):
             if len(labels[i]) == 0:
-                self.qtgui_time_sink_x_0.set_line_label(i, "Data {0}".format(i))
+                if (i % 2 == 0):
+                    self.qtgui_time_sink_x_0.set_line_label(i, "Re{{Data {0}}}".format(i/2))
+                else:
+                    self.qtgui_time_sink_x_0.set_line_label(i, "Im{{Data {0}}}".format(i/2))
             else:
                 self.qtgui_time_sink_x_0.set_line_label(i, labels[i])
             self.qtgui_time_sink_x_0.set_line_width(i, widths[i])
@@ -211,7 +218,7 @@ class CIAA_UDP_Receiver_Working(gr.top_block, Qt.QWidget):
 
         self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_time_sink_x_0_win)
-        self.qtgui_freq_sink_x_0 = qtgui.freq_sink_f(
+        self.qtgui_freq_sink_x_0 = qtgui.freq_sink_c(
             1024, #size
             window.WIN_BLACKMAN, #wintype
             0, #fc
@@ -232,7 +239,6 @@ class CIAA_UDP_Receiver_Working(gr.top_block, Qt.QWidget):
         self.qtgui_freq_sink_x_0.set_fft_window_normalized(False)
 
 
-        self.qtgui_freq_sink_x_0.set_plot_pos_half(not True)
 
         labels = ['Ch0', 'Ch1', 'Ch2', 'Ch3', '',
             '', '', '', '', '']
@@ -256,30 +262,32 @@ class CIAA_UDP_Receiver_Working(gr.top_block, Qt.QWidget):
         self.top_layout.addWidget(self._qtgui_freq_sink_x_0_win)
         self.network_socket_pdu_0 = network.socket_pdu('UDP_SERVER', '0.0.0.0', '9999', 10000, False)
         self.epy_block_ciaa_unpacker = epy_block_ciaa_unpacker.blk(data_type='int16', warn_overflow=True, max_packets_to_save=save_packets, data_mode=data_mode)
+        self.blocks_null_sink_1 = blocks.null_sink(gr.sizeof_gr_complex*1)
+        self.blocks_null_sink_0 = blocks.null_sink(gr.sizeof_gr_complex*1)
 
 
         ##################################################
         # Connections
         ##################################################
         self.msg_connect((self.network_socket_pdu_0, 'pdus'), (self.epy_block_ciaa_unpacker, 'pdus'))
-        self.connect((self.epy_block_ciaa_unpacker, 0), (self.qtgui_freq_sink_x_0, 0))
+        self.connect((self.epy_block_ciaa_unpacker, 7), (self.blocks_null_sink_0, 2))
+        self.connect((self.epy_block_ciaa_unpacker, 5), (self.blocks_null_sink_0, 0))
+        self.connect((self.epy_block_ciaa_unpacker, 6), (self.blocks_null_sink_0, 1))
+        self.connect((self.epy_block_ciaa_unpacker, 14), (self.blocks_null_sink_1, 1))
+        self.connect((self.epy_block_ciaa_unpacker, 13), (self.blocks_null_sink_1, 0))
+        self.connect((self.epy_block_ciaa_unpacker, 15), (self.blocks_null_sink_1, 2))
         self.connect((self.epy_block_ciaa_unpacker, 8), (self.qtgui_freq_sink_x_0, 1))
-        self.connect((self.epy_block_ciaa_unpacker, 5), (self.qtgui_time_sink_x_0, 5))
+        self.connect((self.epy_block_ciaa_unpacker, 0), (self.qtgui_freq_sink_x_0, 0))
+        self.connect((self.epy_block_ciaa_unpacker, 3), (self.qtgui_time_sink_x_0, 3))
         self.connect((self.epy_block_ciaa_unpacker, 2), (self.qtgui_time_sink_x_0, 2))
         self.connect((self.epy_block_ciaa_unpacker, 0), (self.qtgui_time_sink_x_0, 0))
-        self.connect((self.epy_block_ciaa_unpacker, 1), (self.qtgui_time_sink_x_0, 1))
         self.connect((self.epy_block_ciaa_unpacker, 4), (self.qtgui_time_sink_x_0, 4))
-        self.connect((self.epy_block_ciaa_unpacker, 7), (self.qtgui_time_sink_x_0, 7))
-        self.connect((self.epy_block_ciaa_unpacker, 3), (self.qtgui_time_sink_x_0, 3))
-        self.connect((self.epy_block_ciaa_unpacker, 6), (self.qtgui_time_sink_x_0, 6))
-        self.connect((self.epy_block_ciaa_unpacker, 13), (self.qtgui_time_sink_x_1, 5))
-        self.connect((self.epy_block_ciaa_unpacker, 9), (self.qtgui_time_sink_x_1, 1))
+        self.connect((self.epy_block_ciaa_unpacker, 1), (self.qtgui_time_sink_x_0, 1))
         self.connect((self.epy_block_ciaa_unpacker, 12), (self.qtgui_time_sink_x_1, 4))
-        self.connect((self.epy_block_ciaa_unpacker, 15), (self.qtgui_time_sink_x_1, 7))
-        self.connect((self.epy_block_ciaa_unpacker, 14), (self.qtgui_time_sink_x_1, 6))
-        self.connect((self.epy_block_ciaa_unpacker, 8), (self.qtgui_time_sink_x_1, 0))
         self.connect((self.epy_block_ciaa_unpacker, 11), (self.qtgui_time_sink_x_1, 3))
+        self.connect((self.epy_block_ciaa_unpacker, 8), (self.qtgui_time_sink_x_1, 0))
         self.connect((self.epy_block_ciaa_unpacker, 10), (self.qtgui_time_sink_x_1, 2))
+        self.connect((self.epy_block_ciaa_unpacker, 9), (self.qtgui_time_sink_x_1, 1))
 
 
     def closeEvent(self, event):

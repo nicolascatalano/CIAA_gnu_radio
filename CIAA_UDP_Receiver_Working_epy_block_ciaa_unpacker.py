@@ -36,7 +36,7 @@ class blk(gr.sync_block):
             self,
             name='CIAA_Unpacker',
             in_sig=None,
-            out_sig=[np.float32] * 16,
+            out_sig=[np.complex64] * 16,
         )
         self.message_port_register_in(pmt.intern("pdus"))
         self.set_msg_handler(pmt.intern("pdus"), self._handle_pdu)
@@ -185,6 +185,11 @@ class blk(gr.sync_block):
             raw14 = (words & 0x3FFF).astype(np.int16)
             raw14[raw14 & 0x2000 > 0] -= 0x4000
             samples = raw14.astype(np.float32)
+        elif self.data_mode == 3:
+            # Complex: HI = parte real, LO = parte imaginaria
+            hi = ((words >> 16) & 0xFFFF).astype(np.int16).astype(np.float32)
+            lo = (words & 0xFFFF).astype(np.int16).astype(np.float32)
+            samples = hi + 1j * lo
         else:
             samples = words.astype(np.float32)
 
